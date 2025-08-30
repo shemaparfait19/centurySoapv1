@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
 import {
   Package,
   TrendingUp,
@@ -9,9 +9,20 @@ import {
   Users,
   BarChart3,
   Calendar,
-} from 'lucide-react';
-import { DashboardStats, Product, Sale } from '../types';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+} from "lucide-react";
+import { DashboardStats } from "../types";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -39,18 +50,18 @@ const Dashboard: React.FC = () => {
   }, []);
 
   const chartData = [
-    { name: 'Mon', sales: 12, revenue: 36000 },
-    { name: 'Tue', sales: 19, revenue: 57000 },
-    { name: 'Wed', sales: 15, revenue: 45000 },
-    { name: 'Thu', sales: 22, revenue: 66000 },
-    { name: 'Fri', sales: 18, revenue: 54000 },
-    { name: 'Sat', sales: 25, revenue: 75000 },
-    { name: 'Sun', sales: 20, revenue: 60000 },
+    { name: "Mon", sales: 12, revenue: 36000 },
+    { name: "Tue", sales: 19, revenue: 57000 },
+    { name: "Wed", sales: 15, revenue: 45000 },
+    { name: "Thu", sales: 22, revenue: 66000 },
+    { name: "Fri", sales: 18, revenue: 54000 },
+    { name: "Sat", sales: 25, revenue: 75000 },
+    { name: "Sun", sales: 20, revenue: 60000 },
   ];
 
   const paymentData = [
-    { name: 'Cash', value: 65, color: '#10b981' },
-    { name: 'MoMo', value: 35, color: '#8b5cf6' },
+    { name: "Cash", value: 65, color: "#10b981" },
+    { name: "MoMo", value: 35, color: "#8b5cf6" },
   ];
 
   const StatCard: React.FC<{
@@ -72,7 +83,9 @@ const Dashboard: React.FC = () => {
             </p>
           )}
         </div>
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}>
+        <div
+          className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}
+        >
           {icon}
         </div>
       </div>
@@ -85,16 +98,20 @@ const Dashboard: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Welcome back, {user?.name}! Here's what's happening today.</p>
+          <p className="text-gray-600">
+            Welcome back, {user?.name}! Here's what's happening today.
+          </p>
         </div>
         <div className="flex items-center space-x-2 text-sm text-gray-500">
           <Calendar className="w-4 h-4" />
-          <span>{new Date().toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })}</span>
+          <span>
+            {new Date().toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </span>
         </div>
       </div>
 
@@ -132,7 +149,9 @@ const Dashboard: React.FC = () => {
         {/* Sales Trend Chart */}
         <div className="card">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Sales Trend (This Week)</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Sales Trend (This Week)
+            </h3>
             <div className="flex items-center space-x-2 text-sm text-gray-500">
               <div className="w-3 h-3 bg-primary-500 rounded-full"></div>
               <span>Sales</span>
@@ -143,21 +162,21 @@ const Dashboard: React.FC = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
               <XAxis dataKey="name" stroke="#6b7280" />
               <YAxis stroke="#6b7280" />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#fff', 
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#fff",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                 }}
               />
-              <Line 
-                type="monotone" 
-                dataKey="sales" 
-                stroke="#0ea5e9" 
+              <Line
+                type="monotone"
+                dataKey="sales"
+                stroke="#0ea5e9"
                 strokeWidth={3}
-                dot={{ fill: '#0ea5e9', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: '#0ea5e9', strokeWidth: 2 }}
+                dot={{ fill: "#0ea5e9", strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, stroke: "#0ea5e9", strokeWidth: 2 }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -166,7 +185,9 @@ const Dashboard: React.FC = () => {
         {/* Payment Methods Chart */}
         <div className="card">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Payment Methods</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Payment Methods
+            </h3>
             <div className="flex items-center space-x-4 text-sm">
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 bg-success-500 rounded-full"></div>
@@ -193,14 +214,14 @@ const Dashboard: React.FC = () => {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#fff', 
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#fff",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                 }}
-                formatter={(value: number) => [`${value}%`, 'Percentage']}
+                formatter={(value: number) => [`${value}%`, "Percentage"]}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -211,7 +232,9 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Quick Actions */}
         <div className="card">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Quick Actions
+          </h3>
           <div className="space-y-3">
             <button className="w-full btn-primary text-left flex items-center space-x-3">
               <ShoppingCart className="w-5 h-5" />
@@ -259,7 +282,7 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
             )}
-            
+
             <div className="flex items-center space-x-3 p-3 bg-primary-50 border border-primary-200 rounded-lg">
               <Users className="w-5 h-5 text-primary-600" />
               <div>
@@ -278,4 +301,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

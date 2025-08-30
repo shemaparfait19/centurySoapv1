@@ -1,5 +1,5 @@
 import { supabase } from "../lib/supabase";
-import { Product, Sale, User, StockUpdate } from "../types";
+import { Product, Sale, StockUpdate } from "../types";
 
 // User Management
 export const supabaseService = {

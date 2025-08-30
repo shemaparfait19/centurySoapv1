@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState } from "react";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import {
   Home,
   Package,
@@ -11,9 +11,7 @@ import {
   Menu,
   X,
   User,
-  TrendingUp,
-  AlertTriangle,
-} from 'lucide-react';
+} from "lucide-react";
 
 const Layout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -22,22 +20,22 @@ const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: Home },
-    { name: 'Products', href: '/products', icon: Package },
-    { name: 'Sales', href: '/sales', icon: ShoppingCart },
-    { name: 'Inventory', href: '/inventory', icon: Warehouse },
-    { name: 'Reports', href: '/reports', icon: BarChart3 },
+    { name: "Dashboard", href: "/", icon: Home },
+    { name: "Products", href: "/products", icon: Package },
+    { name: "Sales", href: "/sales", icon: ShoppingCart },
+    { name: "Inventory", href: "/inventory", icon: Warehouse },
+    { name: "Reports", href: "/reports", icon: BarChart3 },
   ];
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   const isActive = (href: string) => location.pathname === href;
 
   if (!user) {
-    navigate('/login');
+    navigate("/login");
     return null;
   }
 
@@ -52,9 +50,11 @@ const Layout: React.FC = () => {
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+      <div
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
@@ -86,13 +86,15 @@ const Layout: React.FC = () => {
                   }}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
                     isActive(item.href)
-                      ? 'bg-primary-50 text-primary-700 border border-primary-200 shadow-sm'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                      ? "bg-primary-50 text-primary-700 border border-primary-200 shadow-sm"
+                      : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                   }`}
                 >
-                  <Icon className={`w-5 h-5 ${
-                    isActive(item.href) ? 'text-primary-600' : 'text-gray-500'
-                  }`} />
+                  <Icon
+                    className={`w-5 h-5 ${
+                      isActive(item.href) ? "text-primary-600" : "text-gray-500"
+                    }`}
+                  />
                   <span className="font-medium">{item.name}</span>
                 </button>
               );
@@ -107,7 +109,9 @@ const Layout: React.FC = () => {
               <User className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {user.name}
+              </p>
               <p className="text-xs text-gray-500 capitalize">{user.role}</p>
             </div>
           </div>
@@ -136,7 +140,9 @@ const Layout: React.FC = () => {
               <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-lg flex items-center justify-center">
                 <Package className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg font-bold text-gray-900">CENTURY SOAP</span>
+              <span className="text-lg font-bold text-gray-900">
+                CENTURY SOAP
+              </span>
             </div>
             <div className="w-10" /> {/* Spacer for centering */}
           </div>
@@ -151,4 +157,4 @@ const Layout: React.FC = () => {
   );
 };
 
-export default Layout; 
+export default Layout;

@@ -20,7 +20,7 @@ const Products: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+
 
   // Mock products data
   useEffect(() => {
@@ -242,7 +242,7 @@ const Products: React.FC = () => {
             setShowAddModal(false);
             setEditingProduct(null);
           }}
-          onSave={editingProduct ? handleEditProduct : handleAddProduct}
+          onSave={editingProduct ? (productData) => handleEditProduct({ ...editingProduct, ...productData }) : handleAddProduct}
         />
       )}
     </div>

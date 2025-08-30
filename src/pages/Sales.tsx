@@ -4,15 +4,11 @@ import {
   ShoppingCart,
   Plus,
   Search,
-  Filter,
-  Calendar,
   DollarSign,
   Package,
   User,
-  CreditCard,
   Banknote,
   Smartphone,
-  Eye,
   Download,
 } from "lucide-react";
 import { Sale, Product } from "../types";
