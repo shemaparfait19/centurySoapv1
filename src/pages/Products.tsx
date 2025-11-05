@@ -9,8 +9,11 @@ import {
   Filter,
   AlertTriangle,
   CheckCircle,
+  Droplet,
+  Sparkles,
+  Layers,
 } from 'lucide-react';
-import { Product } from '../types';
+import { Product, ProductCategory } from '../types';
 import toast from 'react-hot-toast';
 
 const Products: React.FC = () => {
@@ -21,71 +24,176 @@ const Products: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
+  const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'all'>('all');
 
-  // Mock products data
+  // Mock products data with new structure
   useEffect(() => {
     const mockProducts: Product[] = [
+      // LIQUID SOAP
       {
         id: '1',
-        name: 'Soap Liquid Jerry Can 7L',
-        description: 'Premium liquid soap in 7L jerry can',
-        capacity: 7,
+        category: 'LIQUID_SOAP',
+        name: 'Century Liquid Soap 5L',
+        description: '5 Liter Jerry Can',
+        size: 5,
+        sizeUnit: 'L',
         unit: 'jerry_can',
-        price: 3500,
-        stock: 150,
+        regularPrice: 2000,
+        randomPrice: 2500,
+        stock: 50,
         minStock: 20,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-15'),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       {
         id: '2',
-        name: 'Soap Liquid Jerry Can 10L',
-        description: 'Premium liquid soap in 10L jerry can',
-        capacity: 10,
+        category: 'LIQUID_SOAP',
+        name: 'Century Liquid Soap 20L',
+        description: '20 Liter Jerry Can',
+        size: 20,
+        sizeUnit: 'L',
         unit: 'jerry_can',
-        price: 5000,
-        stock: 80,
-        minStock: 15,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-15'),
+        regularPrice: 10000,
+        randomPrice: 10000,
+        stock: 30,
+        minStock: 10,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       {
         id: '3',
-        name: 'Soap Liquid Jerry Can 20L',
-        description: 'Premium liquid soap in 20L jerry can',
-        capacity: 20,
-        unit: 'jerry_can',
-        price: 9500,
-        stock: 45,
-        minStock: 10,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-15'),
+        category: 'LIQUID_SOAP',
+        name: 'Century Liquid Soap Box of 4',
+        description: 'Box of 4 (5L each)',
+        size: 5,
+        sizeUnit: 'L',
+        unit: 'box',
+        itemsPerBox: 4,
+        regularPrice: 8000,
+        randomPrice: 10000,
+        stock: 15,
+        minStock: 5,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
+      // HANDWASH
       {
         id: '4',
-        name: 'Soap Liquid Bulk 50L',
-        description: 'Premium liquid soap in 50L container',
-        capacity: 50,
-        unit: 'L',
-        price: 22500,
+        category: 'HANDWASH',
+        name: 'Century Handwash 500ml',
+        description: '500ml Bottle',
+        size: 500,
+        sizeUnit: 'ml',
+        unit: 'bottle',
+        regularPrice: 1100,
+        randomPrice: 1500,
         stock: 200,
         minStock: 50,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-15'),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: '5',
+        category: 'HANDWASH',
+        name: 'Century Handwash Box of 24',
+        description: 'Box of 24 (500ml each)',
+        size: 500,
+        sizeUnit: 'ml',
+        unit: 'box',
+        itemsPerBox: 24,
+        regularPrice: 26400,
+        randomPrice: 26400,
+        stock: 10,
+        minStock: 3,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: '6',
+        category: 'HANDWASH',
+        name: 'Century Handwash 20L',
+        description: '20 Liter Jerry Can',
+        size: 20,
+        sizeUnit: 'L',
+        unit: 'jerry_can',
+        regularPrice: 25000,
+        randomPrice: 35000,
+        stock: 12,
+        minStock: 5,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      // TILES CLEANER
+      {
+        id: '7',
+        category: 'TILES_CLEANER',
+        name: 'Century Tiles Cleaner 1L',
+        description: '1 Liter Bottle',
+        size: 1,
+        sizeUnit: 'L',
+        unit: 'bottle',
+        regularPrice: 3000,
+        randomPrice: 3000,
+        stock: 80,
+        minStock: 20,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: '8',
+        category: 'TILES_CLEANER',
+        name: 'Century Tiles Cleaner Box of 12',
+        description: 'Box of 12 (1L each)',
+        size: 1,
+        sizeUnit: 'L',
+        unit: 'box',
+        itemsPerBox: 12,
+        regularPrice: 36000,
+        randomPrice: 36000,
+        stock: 8,
+        minStock: 3,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: '9',
+        category: 'TILES_CLEANER',
+        name: 'Century Tiles Cleaner 20L',
+        description: '20 Liter Jerry Can',
+        size: 20,
+        sizeUnit: 'L',
+        unit: 'jerry_can',
+        regularPrice: 60000,
+        randomPrice: 60000,
+        stock: 6,
+        minStock: 2,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     ];
     setProducts(mockProducts);
     setFilteredProducts(mockProducts);
   }, []);
 
-  // Filter products based on search term
+  // Filter products based on search term and category
   useEffect(() => {
-    const filtered = products.filter(product =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    let filtered = products;
+    
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(product => product.category === selectedCategory);
+    }
+    
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
     setFilteredProducts(filtered);
-  }, [searchTerm, products]);
+  }, [searchTerm, products, selectedCategory]);
 
   const handleAddProduct = (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
     const newProduct: Product = {
@@ -157,11 +265,54 @@ const Products: React.FC = () => {
               className="input-field pl-10"
             />
           </div>
-          <button className="btn-secondary flex items-center space-x-2">
-            <Filter className="w-5 h-5" />
-            <span>Filter</span>
-          </button>
         </div>
+      </div>
+
+      {/* Category Filters */}
+      <div className="flex items-center space-x-3 overflow-x-auto pb-2">
+        <button
+          onClick={() => setSelectedCategory('all')}
+          className={`px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
+            selectedCategory === 'all'
+              ? 'bg-primary-600 text-white shadow-md'
+              : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+          }`}
+        >
+          All Products
+        </button>
+        <button
+          onClick={() => setSelectedCategory('LIQUID_SOAP')}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
+            selectedCategory === 'LIQUID_SOAP'
+              ? 'bg-primary-600 text-white shadow-md'
+              : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+          }`}
+        >
+          <Droplet className="w-4 h-4" />
+          <span>Liquid Soap</span>
+        </button>
+        <button
+          onClick={() => setSelectedCategory('HANDWASH')}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
+            selectedCategory === 'HANDWASH'
+              ? 'bg-primary-600 text-white shadow-md'
+              : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+          }`}
+        >
+          <Sparkles className="w-4 h-4" />
+          <span>Handwash</span>
+        </button>
+        <button
+          onClick={() => setSelectedCategory('TILES_CLEANER')}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
+            selectedCategory === 'TILES_CLEANER'
+              ? 'bg-primary-600 text-white shadow-md'
+              : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+          }`}
+        >
+          <Layers className="w-4 h-4" />
+          <span>Tiles Cleaner</span>
+        </button>
       </div>
 
       {/* Products Grid */}
@@ -201,23 +352,30 @@ const Products: React.FC = () => {
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Capacity:</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {product.capacity} {product.unit === 'jerry_can' ? 'L Jerry Can' : 'L'}
+                  <span className="text-sm text-gray-500">Unit Type:</span>
+                  <span className="text-sm font-medium text-gray-900 capitalize">
+                    {product.unit === 'jerry_can' ? 'Jerry Can' : product.unit === 'box' ? 'Box' : 'Bottle'}
                   </span>
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Price:</span>
+                  <span className="text-sm text-gray-500">Regular Price:</span>
+                  <span className="text-sm font-medium text-success-600">
+                    {product.regularPrice.toLocaleString()} RWF
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">Random Price:</span>
                   <span className="text-sm font-medium text-gray-900">
-                    RWF {product.price.toLocaleString()}
+                    {product.randomPrice.toLocaleString()} RWF
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-500">Stock:</span>
                   <span className="text-sm font-medium text-gray-900">
-                    {product.stock} L
+                    {product.stock} {product.unit === 'jerry_can' ? 'cans' : product.unit === 'box' ? 'boxes' : 'bottles'}
                   </span>
                 </div>
 
