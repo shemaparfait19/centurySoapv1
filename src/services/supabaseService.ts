@@ -1,5 +1,5 @@
 import { supabase } from "../lib/supabase";
-import { Product, Sale, StockUpdate } from "../types";
+import { Product, Sale, StockUpdate, Client } from "../types";
 
 // User Management
 export const supabaseService = {
@@ -302,6 +302,73 @@ export const supabaseService = {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "stock_updates" },
+        callback
+      )
+      .subscribe();
+  },
+
+  // Clients Management
+  async getClients(): Promise<Client[]> {
+    const { data, error } = await supabase
+      .from("clients")
+      .select("*")
+      .order("name");
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getClient(id: string): Promise<Client | null> {
+    const { data, error } = await supabase
+      .from("clients")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async createClient(
+    client: Omit<Client, "id" | "createdAt" | "updatedAt" | "totalPurchases" | "lastPurchaseDate">
+  ): Promise<Client> {
+    const { data, error } = await supabase
+      .from("clients")
+      .insert({
+        ...client,
+        total_purchases: 0,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async updateClient(id: string, updates: Partial<Client>): Promise<Client> {
+    const { data, error } = await supabase
+      .from("clients")
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async deleteClient(id: string): Promise<void> {
+    const { error } = await supabase.from("clients").delete().eq("id", id);
+
+    if (error) throw error;
+  },
+
+  subscribeToClients(callback: (payload: any) => void) {
+    return supabase
+      .channel("clients_changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "clients" },
         callback
       )
       .subscribe();

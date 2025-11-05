@@ -7,6 +7,7 @@ import {
   ShoppingCart,
   BarChart3,
   Warehouse,
+  Users,
   LogOut,
   Menu,
   X,
@@ -24,6 +25,7 @@ const Layout: React.FC = () => {
     { name: "Products", href: "/products", icon: Package },
     { name: "Sales", href: "/sales", icon: ShoppingCart },
     { name: "Inventory", href: "/inventory", icon: Warehouse },
+    { name: "Clients", href: "/clients", icon: Users },
     { name: "Reports", href: "/reports", icon: BarChart3 },
   ];
 
