@@ -34,18 +34,24 @@ const Dashboard: React.FC = () => {
     todayRevenue: 0,
     monthlyRevenue: 0,
     monthlyGrowth: 0,
+    totalClients: 0,
+    regularClients: 0,
+    randomClients: 0,
   });
 
   // Mock data for demonstration
   useEffect(() => {
     setStats({
-      totalProducts: 8,
-      totalStock: 1250,
+      totalProducts: 9,
+      totalStock: 621,
       lowStockProducts: 2,
       todaySales: 15,
       todayRevenue: 45000,
       monthlyRevenue: 1250000,
       monthlyGrowth: 12.5,
+      totalClients: 25,
+      regularClients: 15,
+      randomClients: 10,
     });
   }, []);
 

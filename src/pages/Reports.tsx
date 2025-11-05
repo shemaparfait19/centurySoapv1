@@ -32,18 +32,24 @@ const Reports: React.FC = () => {
     // Generate mock report data
     const mockReportData: ReportData = {
       period: "This Month",
-      totalLitersSold: 45,
+      totalUnitsSold: 45,
       totalRevenue: 22500,
       cashRevenue: 17500,
       momoRevenue: 5000,
       totalSales: 3,
+      regularClientRevenue: 15000,
+      randomClientRevenue: 7500,
       topProducts: [
-        { name: "Soap Liquid Jerry Can 7L", litersSold: 35, revenue: 17500 },
-        { name: "Soap Liquid Jerry Can 10L", litersSold: 10, revenue: 5000 },
+        { name: "Soap Liquid Jerry Can 20L", unitsSold: 450, revenue: 427500 },
+        { name: "Soap Liquid Jerry Can 10L", unitsSold: 320, revenue: 160000 },
       ],
       topSellers: [
-        { name: "John Seller", litersSold: 35, revenue: 17500 },
-        { name: "Sarah Seller", litersSold: 10, revenue: 5000 },
+        { name: "John Doe", unitsSold: 580, revenue: 348000 },
+        { name: "Jane Smith", unitsSold: 420, revenue: 252000 },
+      ],
+      topClients: [
+        { name: "Hotel Mille Collines", totalPurchases: 25, revenue: 50000 },
+        { name: "Kigali Heights", totalPurchases: 18, revenue: 36000 },
       ],
     };
 
@@ -62,7 +68,7 @@ const Reports: React.FC = () => {
     if (format === "csv") {
       const headers = [
         "Period",
-        "Total Liters Sold",
+        "Total Units Sold",
         "Total Revenue",
         "Cash Revenue",
         "MoMo Revenue",
@@ -72,7 +78,7 @@ const Reports: React.FC = () => {
         headers.join(","),
         [
           reportData?.period || "",
-          reportData?.totalLitersSold || 0,
+          reportData?.totalUnitsSold || 0,
           reportData?.totalRevenue || 0,
           reportData?.cashRevenue || 0,
           reportData?.momoRevenue || 0,
@@ -161,9 +167,9 @@ const Reports: React.FC = () => {
               <Package className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Total Liters Sold</p>
+              <p className="text-sm text-gray-600">Total Units Sold</p>
               <p className="text-2xl font-bold text-gray-900">
-                {reportData.totalLitersSold} L
+                {reportData.totalUnitsSold}
               </p>
             </div>
           </div>
@@ -322,9 +328,12 @@ const Reports: React.FC = () => {
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">{product.name}</p>
-                  <p className="text-sm text-gray-500">
-                    {product.litersSold} L sold
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Units Sold:</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {product.unitsSold}
+                    </span>
+                  </div>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-gray-900">
@@ -361,7 +370,7 @@ const Reports: React.FC = () => {
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">{seller.name}</p>
                   <p className="text-sm text-gray-500">
-                    {seller.litersSold} L sold
+                    {seller.unitsSold} units sold
                   </p>
                 </div>
                 <div className="text-right">
