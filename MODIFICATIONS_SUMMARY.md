@@ -16,6 +16,13 @@ This document outlines the huge modifications made to transform the Century Soap
 - **CENTURY HANDWASH**
 - **CENTURY TILES CLEANER**
 
+### ⚠️ IMPORTANT: Unit-Based Inventory
+**Stock is tracked by ACTUAL UNITS, not liters!**
+- If you have 10 jerry cans of 5L soap → Stock = **10 jerry cans**
+- If you sell 3 jerry cans → Stock becomes **7 jerry cans**
+- Size (5L, 20L, etc.) is for display/reference only
+- You count and manage actual physical units (cans, bottles, boxes)
+
 ### Product Variants & Pricing
 
 #### CENTURY LIQUID SOAP

@@ -6,14 +6,14 @@ export interface Product {
   category: ProductCategory;
   name: string;
   description: string;
-  size: number; // size in liters or ml
-  sizeUnit: 'L' | 'ml'; // liter or milliliter
+  size: number; // size in liters or ml (for display only)
+  sizeUnit: 'L' | 'ml'; // liter or milliliter (for display only)
   unit: ProductUnit; // bottle, jerry_can, or box
   itemsPerBox?: number; // if unit is 'box', how many items per box
-  regularPrice: number; // price for regular/special clients in RWF
-  randomPrice: number; // price for random/occasional clients in RWF
-  stock: number; // current stock in units (bottles, cans, or boxes)
-  minStock: number; // minimum stock threshold
+  regularPrice: number; // price per unit for regular/special clients in RWF
+  randomPrice: number; // price per unit for random/occasional clients in RWF
+  stock: number; // current stock in ACTUAL UNITS (number of jerry cans, bottles, or boxes)
+  minStock: number; // minimum stock threshold in units
   createdAt: Date;
   updatedAt: Date;
 }

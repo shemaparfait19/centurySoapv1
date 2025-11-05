@@ -1,5 +1,18 @@
 # CENTURY SOAP - Quick Start Guide
 
+## ⚠️ CRITICAL: How Inventory Works
+
+**We track ACTUAL UNITS (jerry cans, bottles, boxes) - NOT liters!**
+
+Example:
+- You have **50 jerry cans** of 5L soap → Stock = **50 jerry cans**
+- You sell **10 jerry cans** → Stock = **40 jerry cans**
+- The "5L" is just a label for customers - you count actual cans!
+
+See `INVENTORY_TRACKING_EXAMPLES.md` for detailed examples.
+
+---
+
 ## What Changed?
 
 Your inventory system now supports:

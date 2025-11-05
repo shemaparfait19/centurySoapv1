@@ -57,10 +57,10 @@ CREATE TABLE public.products (
     size_unit TEXT NOT NULL CHECK (size_unit IN ('L', 'ml')),
     unit product_unit NOT NULL,
     items_per_box INTEGER, -- for box units
-    regular_price DECIMAL(12,2) NOT NULL, -- price for regular clients
-    random_price DECIMAL(12,2) NOT NULL, -- price for random clients
-    stock DECIMAL(10,2) NOT NULL DEFAULT 0, -- stock in units
-    min_stock DECIMAL(10,2) NOT NULL DEFAULT 0,
+    regular_price DECIMAL(12,2) NOT NULL, -- price per unit for regular clients
+    random_price DECIMAL(12,2) NOT NULL, -- price per unit for random clients
+    stock DECIMAL(10,2) NOT NULL DEFAULT 0, -- stock in ACTUAL UNITS (jerry cans, bottles, boxes)
+    min_stock DECIMAL(10,2) NOT NULL DEFAULT 0, -- minimum stock threshold in units
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
