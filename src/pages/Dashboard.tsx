@@ -11,6 +11,8 @@ import {
   Calendar,
 } from "lucide-react";
 import { DashboardStats } from "../types";
+import { supabaseService } from "../services/supabaseService";
+import toast from "react-hot-toast";
 import {
   LineChart,
   Line,
@@ -39,21 +41,56 @@ const Dashboard: React.FC = () => {
     randomClients: 0,
   });
 
-  // Mock data for demonstration
+  // Load real data from Supabase
   useEffect(() => {
-    setStats({
-      totalProducts: 9,
-      totalStock: 621,
-      lowStockProducts: 2,
-      todaySales: 15,
-      todayRevenue: 45000,
-      monthlyRevenue: 1250000,
-      monthlyGrowth: 12.5,
-      totalClients: 25,
-      regularClients: 15,
-      randomClients: 10,
-    });
+    loadDashboardData();
   }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      // Get products
+      const products = await supabaseService.getProducts();
+      const totalProducts = products.length;
+      const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
+      const lowStockProducts = products.filter(p => p.stock <= p.minStock).length;
+
+      // Get sales
+      const allSales = await supabaseService.getSales();
+      
+      // Today's sales
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todaySales = allSales.filter(s => new Date(s.date) >= today);
+      const todayRevenue = todaySales.reduce((sum, s) => sum + s.totalAmount, 0);
+
+      // Monthly sales
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const monthlySales = allSales.filter(s => new Date(s.date) >= startOfMonth);
+      const monthlyRevenue = monthlySales.reduce((sum, s) => sum + s.totalAmount, 0);
+
+      // Get clients
+      const clients = await supabaseService.getClients();
+      const totalClients = clients.length;
+      const regularClients = clients.filter(c => c.type === 'regular').length;
+      const randomClients = clients.filter(c => c.type === 'random').length;
+
+      setStats({
+        totalProducts,
+        totalStock,
+        lowStockProducts,
+        todaySales: todaySales.length,
+        todayRevenue,
+        monthlyRevenue,
+        monthlyGrowth: 0, // Calculate based on previous month if needed
+        totalClients,
+        regularClients,
+        randomClients,
+      });
+    } catch (error) {
+      console.error("Error loading dashboard data:", error);
+      toast.error("Failed to load dashboard data");
+    }
+  };
 
   const chartData = [
     { name: "Mon", sales: 12, revenue: 36000 },

@@ -11,7 +11,7 @@ import {
   Smartphone,
   Download,
 } from "lucide-react";
-import { Sale, Product } from "../types";
+import { Sale, Product, Client } from "../types";
 import toast from "react-hot-toast";
 import { supabaseService } from "../services/supabaseService";
 
@@ -471,11 +471,59 @@ const SaleModal: React.FC<SaleModalProps> = ({
   const [formData, setFormData] = useState({
     productId: "",
     quantity: 1,
+    clientId: "",
     clientName: "",
+    clientPhone: "",
     clientType: "random" as "regular" | "random",
     paymentMethod: "Cash" as "Cash" | "MoMo",
     paymentStatus: "Paid" as "Paid" | "Not Paid",
   });
+  const [clients, setClients] = useState<Client[]>([]);
+  const [filteredClients, setFilteredClients] = useState<Client[]>([]);
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+
+  // Load clients
+  useEffect(() => {
+    loadClients();
+  }, []);
+
+  const loadClients = async () => {
+    try {
+      const data = await supabaseService.getClients();
+      setClients(data);
+    } catch (error) {
+      console.error("Error loading clients:", error);
+    }
+  };
+
+  // Filter clients based on search
+  useEffect(() => {
+    if (formData.clientName.length > 0) {
+      const filtered = clients.filter(
+        (c) =>
+          c.name.toLowerCase().includes(formData.clientName.toLowerCase()) ||
+          c.phone?.includes(formData.clientName)
+      );
+      setFilteredClients(filtered);
+      setShowClientDropdown(filtered.length > 0);
+    } else {
+      setFilteredClients([]);
+      setShowClientDropdown(false);
+    }
+  }, [formData.clientName, clients]);
+
+  const selectClient = (client: Client) => {
+    setSelectedClient(client);
+    setFormData({
+      ...formData,
+      clientId: client.id,
+      clientName: client.name,
+      clientPhone: client.phone || "",
+      clientType: client.type,
+    });
+    setShowClientDropdown(false);
+  };
 
   // Auto-set payment status to Paid when payment method is selected
   const handlePaymentMethodChange = (method: "Cash" | "MoMo") => {
@@ -505,6 +553,7 @@ const SaleModal: React.FC<SaleModalProps> = ({
       totalAmount,
       paymentMethod: formData.paymentMethod,
       paymentStatus: formData.paymentStatus,
+      clientId: formData.clientId || undefined,
       clientName: formData.clientName || undefined,
       clientType: formData.clientType,
       sellerId,
@@ -561,20 +610,82 @@ const SaleModal: React.FC<SaleModalProps> = ({
               />
             </div>
 
-            <div>
+            <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Client Name
               </label>
               <input
                 type="text"
                 value={formData.clientName}
-                onChange={(e) =>
-                  setFormData({ ...formData, clientName: e.target.value })
-                }
+                onChange={(e) => {
+                  setFormData({ ...formData, clientName: e.target.value, clientId: "" });
+                  setSelectedClient(null);
+                }}
+                onFocus={() => formData.clientName && setShowClientDropdown(true)}
                 className="input-field"
-                placeholder="Enter client name"
+                placeholder="Start typing to search clients..."
                 required
               />
+              {showClientDropdown && filteredClients.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  {filteredClients.map((client) => (
+                    <button
+                      key={client.id}
+                      type="button"
+                      onClick={() => selectClient(client)}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
+                    >
+                      <div className="font-medium text-gray-900">{client.name}</div>
+                      <div className="text-sm text-gray-600">
+                        {client.phone && `📞 ${client.phone} • `}
+                        {client.type === "regular" ? "Regular Client" : "Random Client"}
+                        {client.totalPurchases > 0 && ` • RWF ${client.totalPurchases.toLocaleString()} spent`}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {selectedClient && (
+                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>Selected:</strong> {selectedClient.name}
+                    {selectedClient.totalPurchases > 0 && (
+                      <span> • Total purchases: RWF {selectedClient.totalPurchases.toLocaleString()}</span>
+                    )}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Client Phone (Optional)
+              </label>
+              <input
+                type="tel"
+                value={formData.clientPhone}
+                onChange={(e) =>
+                  setFormData({ ...formData, clientPhone: e.target.value })
+                }
+                className="input-field"
+                placeholder="Enter phone number"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Client Type
+              </label>
+              <select
+                value={formData.clientType}
+                onChange={(e) =>
+                  setFormData({ ...formData, clientType: e.target.value as "regular" | "random" })
+                }
+                className="input-field"
+              >
+                <option value="random">Random Client (Normal Price)</option>
+                <option value="regular">Regular Client (Special Price)</option>
+              </select>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

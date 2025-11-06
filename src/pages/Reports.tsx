@@ -8,6 +8,7 @@ import {
   Users,
 } from "lucide-react";
 import { ReportData } from "../types";
+import { supabaseService } from "../services/supabaseService";
 import {
   LineChart,
   Line,
@@ -27,41 +28,124 @@ const Reports: React.FC = () => {
   const [dateRange, setDateRange] = useState("month");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock data
+  // Load real data from Supabase
   useEffect(() => {
-    // Generate mock report data
-    const mockReportData: ReportData = {
-      period: "This Month",
-      totalUnitsSold: 45,
-      totalRevenue: 22500,
-      cashRevenue: 17500,
-      momoRevenue: 5000,
-      totalSales: 3,
-      regularClientRevenue: 15000,
-      randomClientRevenue: 7500,
-      topProducts: [
-        { name: "Soap Liquid Jerry Can 20L", unitsSold: 450, revenue: 427500 },
-        { name: "Soap Liquid Jerry Can 10L", unitsSold: 320, revenue: 160000 },
-      ],
-      topSellers: [
-        { name: "John Doe", unitsSold: 580, revenue: 348000 },
-        { name: "Jane Smith", unitsSold: 420, revenue: 252000 },
-      ],
-      topClients: [
-        { name: "Hotel Mille Collines", totalPurchases: 25, revenue: 50000 },
-        { name: "Kigali Heights", totalPurchases: 18, revenue: 36000 },
-      ],
-    };
-
-    setReportData(mockReportData);
-  }, []);
+    generateReport();
+  }, [dateRange]);
 
   const generateReport = async () => {
     setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLoading(false);
-    toast.success("Report generated successfully!");
+    try {
+      // Get date range
+      const today = new Date();
+      let startDate = new Date();
+      let period = "";
+
+      switch (dateRange) {
+        case "week":
+          startDate.setDate(today.getDate() - 7);
+          period = "This Week";
+          break;
+        case "month":
+          startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+          period = "This Month";
+          break;
+        case "quarter":
+          startDate = new Date(today.getFullYear(), Math.floor(today.getMonth() / 3) * 3, 1);
+          period = "This Quarter";
+          break;
+        case "year":
+          startDate = new Date(today.getFullYear(), 0, 1);
+          period = "This Year";
+          break;
+        default:
+          startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+          period = "This Month";
+      }
+
+      // Get all sales in date range
+      const sales = await supabaseService.getSales();
+      const filteredSales = sales.filter(s => new Date(s.date) >= startDate);
+
+      // Calculate totals
+      const totalUnitsSold = filteredSales.reduce((sum, s) => sum + s.quantity, 0);
+      const totalRevenue = filteredSales.reduce((sum, s) => sum + s.totalAmount, 0);
+      const totalSales = filteredSales.length;
+
+      // Payment method breakdown
+      const cashRevenue = filteredSales
+        .filter(s => s.paymentMethod === "Cash")
+        .reduce((sum, s) => sum + s.totalAmount, 0);
+      const momoRevenue = filteredSales
+        .filter(s => s.paymentMethod === "MoMo")
+        .reduce((sum, s) => sum + s.totalAmount, 0);
+
+      // Client type breakdown
+      const regularClientRevenue = filteredSales
+        .filter(s => s.clientType === "regular")
+        .reduce((sum, s) => sum + s.totalAmount, 0);
+      const randomClientRevenue = filteredSales
+        .filter(s => s.clientType === "random")
+        .reduce((sum, s) => sum + s.totalAmount, 0);
+
+      // Top products
+      const productMap = new Map<string, { name: string; unitsSold: number; revenue: number }>();
+      filteredSales.forEach(sale => {
+        const existing = productMap.get(sale.productId) || { name: sale.productName, unitsSold: 0, revenue: 0 };
+        existing.unitsSold += sale.quantity;
+        existing.revenue += sale.totalAmount;
+        productMap.set(sale.productId, existing);
+      });
+      const topProducts = Array.from(productMap.values())
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5);
+
+      // Top sellers
+      const sellerMap = new Map<string, { name: string; unitsSold: number; revenue: number }>();
+      filteredSales.forEach(sale => {
+        const existing = sellerMap.get(sale.sellerId) || { name: sale.sellerName, unitsSold: 0, revenue: 0 };
+        existing.unitsSold += sale.quantity;
+        existing.revenue += sale.totalAmount;
+        sellerMap.set(sale.sellerId, existing);
+      });
+      const topSellers = Array.from(sellerMap.values())
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5);
+
+      // Top clients
+      const clients = await supabaseService.getClients();
+      const topClients = clients
+        .filter(c => c.totalPurchases > 0)
+        .sort((a, b) => b.totalPurchases - a.totalPurchases)
+        .slice(0, 5)
+        .map(c => ({
+          name: c.name,
+          totalPurchases: filteredSales.filter(s => s.clientId === c.id).length,
+          revenue: c.totalPurchases,
+        }));
+
+      const reportData: ReportData = {
+        period,
+        totalUnitsSold,
+        totalRevenue,
+        cashRevenue,
+        momoRevenue,
+        totalSales,
+        regularClientRevenue,
+        randomClientRevenue,
+        topProducts,
+        topSellers,
+        topClients,
+      };
+
+      setReportData(reportData);
+      toast.success("Report generated successfully!");
+    } catch (error) {
+      console.error("Error generating report:", error);
+      toast.error("Failed to generate report");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const exportReport = (format: "csv" | "pdf") => {

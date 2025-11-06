@@ -179,6 +179,20 @@ export const supabaseService = {
   },
 
   async createSale(sale: Omit<Sale, "id" | "createdAt">): Promise<Sale> {
+    // First, get current product stock
+    const { data: product, error: productError } = await supabase
+      .from("products")
+      .select("stock")
+      .eq("id", sale.productId)
+      .single();
+
+    if (productError) throw productError;
+
+    // Check if enough stock available
+    if (product.stock < sale.quantity) {
+      throw new Error(`Insufficient stock. Available: ${product.stock}, Requested: ${sale.quantity}`);
+    }
+
     // Transform camelCase to snake_case for database
     const dbSale = {
       product_id: sale.productId,
@@ -197,6 +211,7 @@ export const supabaseService = {
       date: sale.date,
     };
 
+    // Insert sale
     const { data, error } = await supabase
       .from("sales")
       .insert(dbSale)
@@ -204,6 +219,35 @@ export const supabaseService = {
       .single();
 
     if (error) throw error;
+
+    // Reduce stock
+    const newStock = product.stock - sale.quantity;
+    const { error: updateError } = await supabase
+      .from("products")
+      .update({ stock: newStock })
+      .eq("id", sale.productId);
+
+    if (updateError) throw updateError;
+
+    // Update client purchase tracking if clientId exists
+    if (sale.clientId) {
+      const { data: client } = await supabase
+        .from("clients")
+        .select("total_purchases")
+        .eq("id", sale.clientId)
+        .single();
+
+      if (client) {
+        const newTotalPurchases = client.total_purchases + sale.totalAmount;
+        await supabase
+          .from("clients")
+          .update({
+            total_purchases: newTotalPurchases,
+            last_purchase_date: new Date().toISOString().split('T')[0],
+          })
+          .eq("id", sale.clientId);
+      }
+    }
     
     // Transform snake_case back to camelCase
     return {
@@ -388,7 +432,19 @@ export const supabaseService = {
       .order("name");
 
     if (error) throw error;
-    return data || [];
+    
+    // Transform snake_case to camelCase
+    return (data || []).map((client: any) => ({
+      id: client.id,
+      name: client.name,
+      phone: client.phone,
+      email: client.email,
+      type: client.type,
+      totalPurchases: client.total_purchases,
+      lastPurchaseDate: client.last_purchase_date ? new Date(client.last_purchase_date) : undefined,
+      createdAt: new Date(client.created_at),
+      updatedAt: new Date(client.updated_at),
+    }));
   },
 
   async getClient(id: string): Promise<Client | null> {
@@ -405,17 +461,32 @@ export const supabaseService = {
   async createClient(
     client: Omit<Client, "id" | "createdAt" | "updatedAt" | "totalPurchases" | "lastPurchaseDate">
   ): Promise<Client> {
-    const { data, error } = await supabase
+    const { data, error} = await supabase
       .from("clients")
       .insert({
-        ...client,
+        name: client.name,
+        phone: client.phone,
+        email: client.email,
+        type: client.type,
         total_purchases: 0,
       })
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    
+    // Transform snake_case to camelCase
+    return {
+      id: data.id,
+      name: data.name,
+      phone: data.phone,
+      email: data.email,
+      type: data.type,
+      totalPurchases: data.total_purchases,
+      lastPurchaseDate: data.last_purchase_date ? new Date(data.last_purchase_date) : undefined,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
+    };
   },
 
   async updateClient(id: string, updates: Partial<Client>): Promise<Client> {
