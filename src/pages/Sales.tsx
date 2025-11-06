@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Sale, Product } from "../types";
 import toast from "react-hot-toast";
+import { supabaseService } from "../services/supabaseService";
 
 const Sales: React.FC = () => {
   const { user } = useAuth();
@@ -23,59 +24,109 @@ const Sales: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("all");
 
-  // Mock data
+  // Load data from Supabase
   useEffect(() => {
+    loadProducts();
+    loadSales();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      const data = await supabaseService.getProducts();
+      if (data && data.length > 0) {
+        setProducts(data);
+        return;
+      }
+    } catch (error) {
+      console.error("Error loading products:", error);
+    }
+    
+    // Fallback to mock data if Supabase fails
     const mockProducts: Product[] = [
       {
         id: "1",
-        name: "Soap Liquid Jerry Can 7L",
-        description: "Premium liquid soap in 7L jerry can",
-        capacity: 7,
+        category: "LIQUID_SOAP",
+        name: "Century Liquid Soap 5L",
+        description: "5 Liter Jerry Can",
+        size: 5,
+        sizeUnit: "L",
         unit: "jerry_can",
-        price: 3500,
-        stock: 150,
+        regularPrice: 2000,
+        randomPrice: 2500,
+        stock: 50,
         minStock: 20,
         createdAt: new Date("2024-01-01"),
         updatedAt: new Date("2024-01-15"),
       },
       {
         id: "2",
-        name: "Soap Liquid Jerry Can 10L",
-        description: "Premium liquid soap in 10L jerry can",
-        capacity: 10,
+        category: "LIQUID_SOAP",
+        name: "Century Liquid Soap 20L",
+        description: "20 Liter Jerry Can",
+        size: 20,
+        sizeUnit: "L",
         unit: "jerry_can",
-        price: 5000,
-        stock: 80,
-        minStock: 15,
+        regularPrice: 10000,
+        randomPrice: 10000,
+        stock: 30,
+        minStock: 10,
         createdAt: new Date("2024-01-01"),
         updatedAt: new Date("2024-01-15"),
       },
       {
         id: "3",
-        name: "Soap Liquid Jerry Can 20L",
-        description: "Premium liquid soap in 20L jerry can",
-        capacity: 20,
-        unit: "jerry_can",
-        price: 9500,
-        stock: 45,
-        minStock: 10,
+        category: "HANDWASH",
+        name: "Century Handwash 500ml",
+        description: "500ml Bottle",
+        size: 500,
+        sizeUnit: "ml",
+        unit: "bottle",
+        regularPrice: 1100,
+        randomPrice: 1500,
+        stock: 200,
+        minStock: 50,
         createdAt: new Date("2024-01-01"),
         updatedAt: new Date("2024-01-15"),
       },
     ];
 
+    setProducts(mockProducts);
+  };
+
+  const loadSales = async () => {
+    console.log("🔄 Loading sales from Supabase...");
+    
+    try {
+      const data = await supabaseService.getSales();
+      console.log("📊 Loaded sales from database:", data);
+      
+      if (data && data.length > 0) {
+        setSales(data);
+        setFilteredSales(data);
+        toast.success(`Loaded ${data.length} sales from database`);
+        return;
+      } else {
+        console.log("⚠️ No sales found in database, using mock data");
+      }
+    } catch (error) {
+      console.error("❌ Error loading sales from Supabase:", error);
+    }
+    
+    // Fallback to mock data if Supabase fails
+    console.log("📝 Using mock sales data");
     const mockSales: Sale[] = [
       {
         id: "1",
         productId: "1",
-        productName: "Soap Liquid Jerry Can 7L",
-        quantity: 2,
-        totalLiters: 14,
-        unitPrice: 500,
-        totalAmount: 7000,
+        productName: "Century Liquid Soap 5L",
+        productCategory: "LIQUID_SOAP",
+        quantity: 10,
+        unitPrice: 2000,
+        totalAmount: 20000,
         paymentMethod: "Cash",
         paymentStatus: "Paid",
-        customerName: "John Doe",
+        clientName: "Hotel Mille Collines",
+        clientType: "regular",
         sellerId: "2",
         sellerName: "John Seller",
         date: new Date("2024-01-15"),
@@ -83,15 +134,16 @@ const Sales: React.FC = () => {
       },
       {
         id: "2",
-        productId: "2",
-        productName: "Soap Liquid Jerry Can 10L",
-        quantity: 1,
-        totalLiters: 10,
-        unitPrice: 500,
-        totalAmount: 5000,
+        productId: "3",
+        productName: "Century Handwash 500ml",
+        productCategory: "HANDWASH",
+        quantity: 20,
+        unitPrice: 1500,
+        totalAmount: 30000,
         paymentMethod: "MoMo",
         paymentStatus: "Paid",
-        customerName: "Jane Smith",
+        clientName: "Walk-in Customer",
+        clientType: "random",
         sellerId: "3",
         sellerName: "Sarah Seller",
         date: new Date("2024-01-15"),
@@ -99,10 +151,9 @@ const Sales: React.FC = () => {
       },
     ];
 
-    setProducts(mockProducts);
     setSales(mockSales);
     setFilteredSales(mockSales);
-  }, []);
+  };
 
   // Filter sales based on search term and date
   useEffect(() => {
@@ -113,7 +164,7 @@ const Sales: React.FC = () => {
       filtered = filtered.filter(
         (sale) =>
           sale.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          sale.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          sale.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           sale.sellerName.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -150,23 +201,42 @@ const Sales: React.FC = () => {
     setFilteredSales(filtered);
   }, [searchTerm, dateFilter, sales]);
 
-  const handleAddSale = (saleData: Omit<Sale, "id" | "createdAt">) => {
+  const handleAddSale = async (saleData: Omit<Sale, "id" | "createdAt">) => {
+    console.log("📝 Attempting to save sale:", saleData);
+    
+    try {
+      const newSale = await supabaseService.createSale(saleData);
+      console.log("✅ Sale saved to Supabase:", newSale);
+      
+      if (newSale) {
+        setSales([newSale, ...sales]);
+        setShowAddModal(false);
+        toast.success("Sale saved to database!");
+        return;
+      }
+    } catch (error) {
+      console.error("❌ Error creating sale in Supabase:", error);
+      toast.error("Failed to save to database. Using local storage.");
+    }
+    
+    // Fallback to local state if Supabase fails
+    console.log("⚠️ Using fallback - saving to local state only");
     const newSale: Sale = {
       ...saleData,
       id: Date.now().toString(),
       createdAt: new Date(),
     };
-    setSales([...sales, newSale]);
+    setSales([newSale, ...sales]);
     setShowAddModal(false);
-    toast.success("Sale recorded successfully!");
+    toast.success("Sale recorded (local only - not saved to database)");
   };
 
   const getTotalRevenue = () => {
     return filteredSales.reduce((total, sale) => total + sale.totalAmount, 0);
   };
 
-  const getTotalLiters = () => {
-    return filteredSales.reduce((total, sale) => total + sale.totalLiters, 0);
+  const getTotalUnits = () => {
+    return filteredSales.reduce((total, sale) => total + sale.quantity, 0);
   };
 
   const exportToCSV = () => {
@@ -189,12 +259,11 @@ const Sales: React.FC = () => {
           sale.date.toLocaleDateString(),
           sale.productName,
           sale.quantity,
-          sale.totalLiters,
           sale.unitPrice,
           sale.totalAmount,
           sale.paymentMethod,
           sale.paymentStatus,
-          sale.customerName || "",
+          sale.clientName || "",
           sale.sellerName,
         ].join(",")
       ),
@@ -249,9 +318,9 @@ const Sales: React.FC = () => {
               <Package className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Total Liters Sold</p>
+              <p className="text-sm text-gray-600">Total Units Sold</p>
               <p className="text-2xl font-bold text-gray-900">
-                {getTotalLiters()} L
+                {getTotalUnits()}
               </p>
             </div>
           </div>
@@ -314,11 +383,10 @@ const Sales: React.FC = () => {
                 <th className="table-header">Date</th>
                 <th className="table-header">Product</th>
                 <th className="table-header">Quantity</th>
-                <th className="table-header">Total (L)</th>
                 <th className="table-header">Amount (RWF)</th>
                 <th className="table-header">Payment</th>
                 <th className="table-header">Status</th>
-                <th className="table-header">Customer</th>
+                <th className="table-header">Client</th>
                 <th className="table-header">Seller</th>
               </tr>
             </thead>
@@ -329,8 +397,7 @@ const Sales: React.FC = () => {
                     {sale.date.toLocaleDateString()}
                   </td>
                   <td className="table-cell font-medium">{sale.productName}</td>
-                  <td className="table-cell">{sale.quantity}</td>
-                  <td className="table-cell">{sale.totalLiters} L</td>
+                  <td className="table-cell">{sale.quantity} units</td>
                   <td className="table-cell font-medium">
                     RWF {sale.totalAmount.toLocaleString()}
                   </td>
@@ -355,7 +422,7 @@ const Sales: React.FC = () => {
                       {sale.paymentStatus}
                     </span>
                   </td>
-                  <td className="table-cell">{sale.customerName || "-"}</td>
+                  <td className="table-cell">{sale.clientName || "-"}</td>
                   <td className="table-cell">
                     <div className="flex items-center space-x-2">
                       <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
@@ -404,18 +471,26 @@ const SaleModal: React.FC<SaleModalProps> = ({
   const [formData, setFormData] = useState({
     productId: "",
     quantity: 1,
-    customerName: "",
+    clientName: "",
+    clientType: "random" as "regular" | "random",
     paymentMethod: "Cash" as "Cash" | "MoMo",
     paymentStatus: "Paid" as "Paid" | "Not Paid",
   });
 
+  // Auto-set payment status to Paid when payment method is selected
+  const handlePaymentMethodChange = (method: "Cash" | "MoMo") => {
+    setFormData({ 
+      ...formData, 
+      paymentMethod: method,
+      paymentStatus: "Paid" // Auto-set to Paid when payment method is selected
+    });
+  };
+
   const selectedProduct = products.find((p) => p.id === formData.productId);
-  const totalLiters = selectedProduct
-    ? selectedProduct.capacity * formData.quantity
+  const unitPrice = selectedProduct
+    ? (formData.clientType === "regular" ? selectedProduct.regularPrice : selectedProduct.randomPrice)
     : 0;
-  const totalAmount = selectedProduct
-    ? selectedProduct.price * formData.quantity
-    : 0;
+  const totalAmount = unitPrice * formData.quantity;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -424,13 +499,14 @@ const SaleModal: React.FC<SaleModalProps> = ({
     const saleData: Omit<Sale, "id" | "createdAt"> = {
       productId: formData.productId,
       productName: selectedProduct.name,
+      productCategory: selectedProduct.category,
       quantity: formData.quantity,
-      totalLiters,
-      unitPrice: selectedProduct.price / selectedProduct.capacity,
+      unitPrice,
       totalAmount,
       paymentMethod: formData.paymentMethod,
       paymentStatus: formData.paymentStatus,
-      customerName: formData.customerName || undefined,
+      clientName: formData.clientName || undefined,
+      clientType: formData.clientType,
       sellerId,
       sellerName,
       date: new Date(),
@@ -463,7 +539,7 @@ const SaleModal: React.FC<SaleModalProps> = ({
                 <option value="">Select a product</option>
                 {products.map((product) => (
                   <option key={product.id} value={product.id}>
-                    {product.name} - RWF {product.price.toLocaleString()}
+                    {product.name} - RWF {product.regularPrice.toLocaleString()}/{product.randomPrice.toLocaleString()}
                   </option>
                 ))}
               </select>
@@ -487,16 +563,17 @@ const SaleModal: React.FC<SaleModalProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Customer Name (Optional)
+                Client Name
               </label>
               <input
                 type="text"
-                value={formData.customerName}
+                value={formData.clientName}
                 onChange={(e) =>
-                  setFormData({ ...formData, customerName: e.target.value })
+                  setFormData({ ...formData, clientName: e.target.value })
                 }
                 className="input-field"
-                placeholder="Enter customer name"
+                placeholder="Enter client name"
+                required
               />
             </div>
 
@@ -508,15 +585,12 @@ const SaleModal: React.FC<SaleModalProps> = ({
                 <select
                   value={formData.paymentMethod}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      paymentMethod: e.target.value as "Cash" | "MoMo",
-                    })
+                    handlePaymentMethodChange(e.target.value as "Cash" | "MoMo")
                   }
                   className="input-field"
                 >
                   <option value="Cash">Cash</option>
-                  <option value="MoMo">MoMo</option>
+                  <option value="MoMo">Mobile Money</option>
                 </select>
               </div>
               <div>
@@ -536,6 +610,9 @@ const SaleModal: React.FC<SaleModalProps> = ({
                   <option value="Paid">Paid</option>
                   <option value="Not Paid">Not Paid</option>
                 </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Auto-set to Paid when payment method selected
+                </p>
               </div>
             </div>
 
@@ -549,8 +626,8 @@ const SaleModal: React.FC<SaleModalProps> = ({
                     <span className="font-medium">{selectedProduct.name}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Total Liters:</span>
-                    <span className="font-medium">{totalLiters} L</span>
+                    <span className="text-gray-600">Unit Price:</span>
+                    <span className="font-medium">RWF {unitPrice.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total Amount:</span>

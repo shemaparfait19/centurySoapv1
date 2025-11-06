@@ -29,61 +29,77 @@ const Inventory: React.FC = () => {
     const mockProducts: Product[] = [
       {
         id: "1",
-        name: "Soap Liquid Jerry Can 7L",
-        description: "Premium liquid soap in 7L jerry can",
-        capacity: 7,
+        category: "LIQUID_SOAP",
+        name: "Century Liquid Soap 5L",
+        description: "5 Liter Jerry Can",
+        size: 5,
+        sizeUnit: "L",
         unit: "jerry_can",
-        price: 3500,
-        stock: 150,
+        regularPrice: 2000,
+        randomPrice: 2500,
+        stock: 50,
         minStock: 20,
         createdAt: new Date("2024-01-01"),
         updatedAt: new Date("2024-01-15"),
       },
       {
         id: "2",
-        name: "Soap Liquid Jerry Can 10L",
-        description: "Premium liquid soap in 10L jerry can",
-        capacity: 10,
+        category: "LIQUID_SOAP",
+        name: "Century Liquid Soap 20L",
+        description: "20 Liter Jerry Can",
+        size: 20,
+        sizeUnit: "L",
         unit: "jerry_can",
-        price: 5000,
-        stock: 80,
-        minStock: 15,
-        createdAt: new Date("2024-01-01"),
-        updatedAt: new Date("2024-01-15"),
-      },
-      {
-        id: "3",
-        name: "Soap Liquid Jerry Can 20L",
-        description: "Premium liquid soap in 20L jerry can",
-        capacity: 20,
-        unit: "jerry_can",
-        price: 9500,
-        stock: 45,
+        regularPrice: 10000,
+        randomPrice: 10000,
+        stock: 30,
         minStock: 10,
         createdAt: new Date("2024-01-01"),
         updatedAt: new Date("2024-01-15"),
       },
       {
-        id: "4",
-        name: "Soap Liquid Bulk 50L",
-        description: "Premium liquid soap in 50L container",
-        capacity: 50,
-        unit: "L",
-        price: 22500,
+        id: "3",
+        category: "HANDWASH",
+        name: "Century Handwash 500ml",
+        description: "500ml Bottle",
+        size: 500,
+        sizeUnit: "ml",
+        unit: "bottle",
+        regularPrice: 1100,
+        randomPrice: 1500,
         stock: 200,
         minStock: 50,
         createdAt: new Date("2024-01-01"),
         updatedAt: new Date("2024-01-15"),
       },
       {
+        id: "4",
+        category: "TILES_CLEANER",
+        name: "Century Tiles Cleaner 1L",
+        description: "1 Liter Bottle",
+        size: 1,
+        sizeUnit: "L",
+        unit: "bottle",
+        regularPrice: 3000,
+        randomPrice: 3000,
+        stock: 80,
+        minStock: 20,
+        createdAt: new Date("2024-01-01"),
+        updatedAt: new Date("2024-01-15"),
+      },
+      {
         id: "5",
-        name: "Soap Liquid Jerry Can 5L",
-        description: "Premium liquid soap in 5L jerry can",
-        capacity: 5,
-        unit: "jerry_can",
-        price: 2500,
-        stock: 12,
-        minStock: 25,
+        category: "LIQUID_SOAP",
+        name: "Century Liquid Soap Box of 4",
+        description: "Box of 4 (5L each)",
+        size: 5,
+        sizeUnit: "L",
+        unit: "box",
+        itemsPerBox: 4,
+        regularPrice: 8000,
+        randomPrice: 10000,
+        stock: 15,
+        minStock: 5,
         createdAt: new Date("2024-01-01"),
         updatedAt: new Date("2024-01-15"),
       },
@@ -169,38 +185,44 @@ const Inventory: React.FC = () => {
     quantity: number,
     reason: string
   ) => {
-    const updatedProducts = products.map((product) => {
-      if (product.id === productId) {
-        const newStock = product.stock + quantity;
-        return { ...product, stock: newStock, updatedAt: new Date() };
-      }
-      return product;
-    });
-
     const product = products.find((p) => p.id === productId);
-    if (product) {
-      const stockUpdate: StockUpdate = {
-        id: Date.now().toString(),
-        productId,
-        productName: product.name,
-        type: "restock",
-        quantity,
-        previousStock: product.stock,
-        newStock: product.stock + quantity,
-        reason,
-        userId: user?.id || "",
-        userName: user?.name || "",
-        date: new Date(),
-        createdAt: new Date(),
-      };
+    if (!product) return;
 
-      setStockUpdates([stockUpdate, ...stockUpdates]);
+    const newStock = product.stock + quantity;
+    
+    // Prevent negative stock
+    if (newStock < 0) {
+      toast.error("Cannot remove more stock than available");
+      return;
     }
 
+    const updatedProducts = products.map((p) => {
+      if (p.id === productId) {
+        return { ...p, stock: newStock, updatedAt: new Date() };
+      }
+      return p;
+    });
+
+    const stockUpdate: StockUpdate = {
+      id: Date.now().toString(),
+      productId,
+      productName: product.name,
+      type: quantity > 0 ? "restock" : "adjustment",
+      quantity: Math.abs(quantity),
+      previousStock: product.stock,
+      newStock,
+      reason,
+      userId: user?.id || "",
+      userName: user?.name || "",
+      date: new Date(),
+      createdAt: new Date(),
+    };
+
+    setStockUpdates([stockUpdate, ...stockUpdates]);
     setProducts(updatedProducts);
     setShowRestockModal(false);
     setSelectedProduct(null);
-    toast.success("Stock updated successfully!");
+    toast.success(quantity > 0 ? "Stock added successfully!" : "Stock removed successfully!");
   };
 
   const getStockStatus = (stock: number, minStock: number) => {
@@ -383,10 +405,9 @@ const Inventory: React.FC = () => {
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Capacity:</span>
+                  <span className="text-sm text-gray-500">Size:</span>
                   <span className="text-sm font-medium text-gray-900">
-                    {product.capacity}{" "}
-                    {product.unit === "jerry_can" ? "L Jerry Can" : "L"}
+                    {product.size}{product.sizeUnit} {product.unit === "jerry_can" ? "Jerry Can" : product.unit === "box" ? "Box" : "Bottle"}
                   </span>
                 </div>
 
@@ -526,6 +547,7 @@ const RestockModal: React.FC<RestockModalProps> = ({
   onRestock,
 }) => {
   const [formData, setFormData] = useState({
+    action: "add" as "add" | "remove",
     quantity: 0,
     reason: "",
   });
@@ -536,7 +558,8 @@ const RestockModal: React.FC<RestockModalProps> = ({
       toast.error("Please enter a valid quantity");
       return;
     }
-    onRestock(product.id, formData.quantity, formData.reason);
+    const finalQuantity = formData.action === "remove" ? -formData.quantity : formData.quantity;
+    onRestock(product.id, finalQuantity, formData.reason);
   };
 
   return (
@@ -544,7 +567,7 @@ const RestockModal: React.FC<RestockModalProps> = ({
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
         <div className="p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">
-            Restock Product
+            Update Stock
           </h2>
 
           <div className="mb-4 p-4 bg-gray-50 rounded-lg">
@@ -564,7 +587,37 @@ const RestockModal: React.FC<RestockModalProps> = ({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Quantity to Add (L)
+                Action
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, action: "add" })}
+                  className={`py-2 px-4 rounded-lg font-medium transition-colors ${
+                    formData.action === "add"
+                      ? "bg-success-500 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  Add Stock
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, action: "remove" })}
+                  className={`py-2 px-4 rounded-lg font-medium transition-colors ${
+                    formData.action === "remove"
+                      ? "bg-danger-500 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  Remove Stock
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Quantity (units)
               </label>
               <input
                 type="number"
@@ -574,13 +627,19 @@ const RestockModal: React.FC<RestockModalProps> = ({
                 }
                 className="input-field"
                 min="1"
+                max={formData.action === "remove" ? product.stock : undefined}
                 required
               />
+              {formData.action === "remove" && formData.quantity > product.stock && (
+                <p className="text-sm text-danger-600 mt-1">
+                  Cannot remove more than current stock ({product.stock} units)
+                </p>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Reason for Restock
+                Reason
               </label>
               <textarea
                 value={formData.reason}
@@ -589,15 +648,23 @@ const RestockModal: React.FC<RestockModalProps> = ({
                 }
                 className="input-field"
                 rows={3}
-                placeholder="e.g., Monthly restock, Low stock alert, etc."
+                placeholder={formData.action === "add" ? "e.g., Monthly restock, New delivery" : "e.g., Damaged goods, Return to supplier"}
                 required
               />
             </div>
 
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm text-blue-800">
+            <div className={`p-4 rounded-lg border ${
+              formData.action === "add" 
+                ? "bg-success-50 border-success-200" 
+                : "bg-danger-50 border-danger-200"
+            }`}>
+              <p className={`text-sm ${
+                formData.action === "add" ? "text-success-800" : "text-danger-800"
+              }`}>
                 <strong>New Stock Level:</strong>{" "}
-                {product.stock + formData.quantity} L
+                {formData.action === "add" 
+                  ? product.stock + formData.quantity 
+                  : product.stock - formData.quantity} units
               </p>
             </div>
 

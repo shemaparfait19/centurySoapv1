@@ -6,14 +6,13 @@ import {
   Edit,
   Trash2,
   Search,
-  Filter,
   AlertTriangle,
   CheckCircle,
   Droplet,
   Sparkles,
   Layers,
 } from 'lucide-react';
-import { Product, ProductCategory } from '../types';
+import { Product, ProductCategory, ProductUnit } from '../types';
 import toast from 'react-hot-toast';
 
 const Products: React.FC = () => {
@@ -416,11 +415,14 @@ interface ProductModalProps {
 
 const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onSave }) => {
   const [formData, setFormData] = useState({
+    category: product?.category || 'LIQUID_SOAP' as ProductCategory,
     name: product?.name || '',
     description: product?.description || '',
-    capacity: product?.capacity || 7,
-    unit: product?.unit || 'jerry_can' as 'L' | 'jerry_can',
-    price: product?.price || 0,
+    size: product?.size || 5,
+    sizeUnit: product?.sizeUnit || 'L' as 'L' | 'ml',
+    unit: product?.unit || 'jerry_can',
+    regularPrice: product?.regularPrice || 0,
+    randomPrice: product?.randomPrice || 0,
     stock: product?.stock || 0,
     minStock: product?.minStock || 10,
   });
@@ -465,15 +467,30 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onSave })
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category
+              </label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value as ProductCategory })}
+                className="input-field"
+              >
+                <option value="LIQUID_SOAP">Liquid Soap</option>
+                <option value="HANDWASH">Handwash</option>
+                <option value="TILES_CLEANER">Tiles Cleaner</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Capacity (L)
+                  Size
                 </label>
                 <input
                   type="number"
-                  value={formData.capacity}
-                  onChange={(e) => setFormData({ ...formData, capacity: Number(e.target.value) })}
+                  value={formData.size}
+                  onChange={(e) => setFormData({ ...formData, size: Number(e.target.value) })}
                   className="input-field"
                   min="1"
                   required
@@ -484,12 +501,26 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onSave })
                   Unit
                 </label>
                 <select
+                  value={formData.sizeUnit}
+                  onChange={(e) => setFormData({ ...formData, sizeUnit: e.target.value as 'L' | 'ml' })}
+                  className="input-field"
+                >
+                  <option value="L">L</option>
+                  <option value="ml">ml</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Type
+                </label>
+                <select
                   value={formData.unit}
-                  onChange={(e) => setFormData({ ...formData, unit: e.target.value as 'L' | 'jerry_can' })}
+                  onChange={(e) => setFormData({ ...formData, unit: e.target.value as ProductUnit })}
                   className="input-field"
                 >
                   <option value="jerry_can">Jerry Can</option>
-                  <option value="L">Liters</option>
+                  <option value="bottle">Bottle</option>
+                  <option value="box">Box</option>
                 </select>
               </div>
             </div>
@@ -497,12 +528,12 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onSave })
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Price (RWF)
+                  Regular Price (RWF)
                 </label>
                 <input
                   type="number"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                  value={formData.regularPrice}
+                  onChange={(e) => setFormData({ ...formData, regularPrice: Number(e.target.value) })}
                   className="input-field"
                   min="0"
                   required
@@ -510,7 +541,23 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onSave })
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Current Stock (L)
+                  Random Price (RWF)
+                </label>
+                <input
+                  type="number"
+                  value={formData.randomPrice}
+                  onChange={(e) => setFormData({ ...formData, randomPrice: Number(e.target.value) })}
+                  className="input-field"
+                  min="0"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Current Stock (units)
                 </label>
                 <input
                   type="number"
@@ -521,20 +568,19 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onSave })
                   required
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Minimum Stock Threshold (L)
-              </label>
-              <input
-                type="number"
-                value={formData.minStock}
-                onChange={(e) => setFormData({ ...formData, minStock: Number(e.target.value) })}
-                className="input-field"
-                min="1"
-                required
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Min Stock (units)
+                </label>
+                <input
+                  type="number"
+                  value={formData.minStock}
+                  onChange={(e) => setFormData({ ...formData, minStock: Number(e.target.value) })}
+                  className="input-field"
+                  min="1"
+                  required
+                />
+              </div>
             </div>
 
             <div className="flex items-center space-x-3 pt-4">

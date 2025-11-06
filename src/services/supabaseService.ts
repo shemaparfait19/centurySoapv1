@@ -39,7 +39,24 @@ export const supabaseService = {
       .order("name");
 
     if (error) throw error;
-    return data || [];
+    
+    // Transform snake_case to camelCase
+    return (data || []).map((product: any) => ({
+      id: product.id,
+      category: product.category,
+      name: product.name,
+      description: product.description,
+      size: product.size,
+      sizeUnit: product.size_unit,
+      unit: product.unit,
+      itemsPerBox: product.items_per_box,
+      regularPrice: product.regular_price,
+      randomPrice: product.random_price,
+      stock: product.stock,
+      minStock: product.min_stock,
+      createdAt: new Date(product.created_at),
+      updatedAt: new Date(product.updated_at),
+    }));
   },
 
   async getProduct(id: string): Promise<Product | null> {
@@ -118,7 +135,26 @@ export const supabaseService = {
 
     const { data, error } = await query;
     if (error) throw error;
-    return data || [];
+    
+    // Transform snake_case to camelCase
+    return (data || []).map((sale: any) => ({
+      id: sale.id,
+      productId: sale.product_id,
+      productName: sale.product_name,
+      productCategory: sale.product_category,
+      quantity: sale.quantity,
+      unitPrice: sale.unit_price,
+      totalAmount: sale.total_amount,
+      paymentMethod: sale.payment_method,
+      paymentStatus: sale.payment_status,
+      clientId: sale.client_id,
+      clientName: sale.client_name,
+      clientType: sale.client_type,
+      sellerId: sale.seller_id,
+      sellerName: sale.seller_name,
+      date: new Date(sale.date),
+      createdAt: new Date(sale.created_at),
+    }));
   },
 
   async getSalesByDateRange(
@@ -143,14 +179,51 @@ export const supabaseService = {
   },
 
   async createSale(sale: Omit<Sale, "id" | "createdAt">): Promise<Sale> {
+    // Transform camelCase to snake_case for database
+    const dbSale = {
+      product_id: sale.productId,
+      product_name: sale.productName,
+      product_category: sale.productCategory,
+      quantity: sale.quantity,
+      unit_price: sale.unitPrice,
+      total_amount: sale.totalAmount,
+      payment_method: sale.paymentMethod,
+      payment_status: sale.paymentStatus,
+      client_id: sale.clientId,
+      client_name: sale.clientName,
+      client_type: sale.clientType,
+      seller_id: sale.sellerId,
+      seller_name: sale.sellerName,
+      date: sale.date,
+    };
+
     const { data, error } = await supabase
       .from("sales")
-      .insert(sale)
+      .insert(dbSale)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    
+    // Transform snake_case back to camelCase
+    return {
+      id: data.id,
+      productId: data.product_id,
+      productName: data.product_name,
+      productCategory: data.product_category,
+      quantity: data.quantity,
+      unitPrice: data.unit_price,
+      totalAmount: data.total_amount,
+      paymentMethod: data.payment_method,
+      paymentStatus: data.payment_status,
+      clientId: data.client_id,
+      clientName: data.client_name,
+      clientType: data.client_type,
+      sellerId: data.seller_id,
+      sellerName: data.seller_name,
+      date: new Date(data.date),
+      createdAt: new Date(data.created_at),
+    };
   },
 
   async updateSale(id: string, updates: Partial<Sale>): Promise<Sale> {
